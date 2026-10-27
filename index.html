@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Free football quiz game with 149 questions on the World Cup, Champions League, Premier League, African football and Copa América. Play a 90-minute match against The Pundit.">
+<meta name="keywords" content="football quiz, soccer trivia, World Cup quiz, Champions League quiz, Premier League quiz, Africa Cup of Nations quiz, Mohamed Salah, كويز كرة القدم, اسئلة كرة القدم">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#123d27">
+<!-- GOOGLE-VERIFICATION: paste the line from Google Search Console here -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ninety Minutes – Football Quiz">
+<meta property="og:description" content="Answer 10 football questions in a 90-minute match against The Pundit. Can you beat him?">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23123d27'/%3E%3Ccircle cx='50' cy='50' r='30' fill='none' stroke='%23eef2e6' stroke-width='6'/%3E%3Ccircle cx='50' cy='50' r='7' fill='%23ffb22e'/%3E%3C/svg%3E">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Ninety Minutes","description":"A free football trivia game with 149 questions, played as a match against The Pundit.","genre":"Trivia","gamePlatform":"Web browser","applicationCategory":"Game","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+<title>Ninety Minutes – Football Quiz Game</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600;700&family=Chivo+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a single matchday column — scoreboard on top, the question as the pitch below, answers as chalk boards. Deliberately single-theme (night match under floodlights). */
+:root{
+  --pitch:#123d27;
+  --pitch-2:#164a2f;
+  --chalk:#eef2e6;
+  --chalk-dim:#a9bcab;
+  --board:#0b1410;
+  --amber:#ffb22e;
+  --win:#5fd38a;
+  --loss:#ff6b5a;
+  --line:rgba(238,242,230,.28);
+  --f-display:"Big Shoulders Display","Impact","Arial Narrow",sans-serif;
+  --f-body:"Barlow","Segoe UI",system-ui,sans-serif;
+  --f-mono:"Chivo Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{min-height:100%}
+body{
+  background:var(--pitch);
+  background-image:repeating-linear-gradient(180deg,var(--pitch) 0 64px,var(--pitch-2) 64px 128px);
+  color:var(--chalk);
+  font-family:var(--f-body);
+  font-size:16px;
+  line-height:1.5;
+}
+.wrap{
+  max-width:720px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:20px 48px;
+  display:flex;flex-direction:column;gap:20px;
+}
+/* Scoreboard */
+.board{
+  background:var(--board);border-radius:6px;
+  border:2px solid #1f2b25;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+  padding:14px 16px;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;
+}
+.team{display:flex;flex-direction:column;gap:2px;min-width:0}
+.team.right{text-align:right}
+.team .name{font-family:var(--f-display);font-weight:800;font-size:1.35rem;letter-spacing:.06em;text-transform:uppercase;line-height:1}
+.team .sub{font-size:.75rem;color:var(--chalk-dim);letter-spacing:.08em;text-transform:uppercase}
+.score{display:flex;align-items:center;gap:10px;font-family:var(--f-mono);font-weight:700;color:var(--amber);font-variant-numeric:tabular-nums}
+.score .n{font-size:2.6rem;line-height:1;min-width:1.4ch;text-align:center;text-shadow:0 0 14px rgba(255,178,46,.45)}
+.score .dash{font-size:1.6rem;opacity:.6}
+.clockrow{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #1f2b25;padding-top:10px;gap:12px}
+.clock{font-family:var(--f-mono);color:var(--amber);font-size:.95rem;font-variant-numeric:tabular-nums}
+.ticker{font-size:.8rem;color:var(--chalk-dim);text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flash .n{animation:pop .5s ease}
+@keyframes pop{0%{transform:scale(1.5)}100%{transform:scale(1)}}
+
+/* Pitch panels */
+.panel{
+  border:2px solid var(--line);border-radius:4px;
+  padding:22px 20px;position:relative;
+  display:flex;flex-direction:column;gap:18px;
+}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--chalk-dim);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:900;font-size:clamp(2.8rem,10vw,4.6rem);line-height:.9;text-transform:uppercase;letter-spacing:.01em;margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--amber)}
+.lede{margin:0;color:var(--chalk-dim);max-width:56ch}
+h2{font-family:var(--f-display);font-weight:800;font-size:clamp(1.6rem,5.2vw,2.1rem);line-height:1.08;margin:0;text-wrap:balance}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  font:600 .9rem var(--f-body);color:var(--chalk);
+  background:transparent;border:1.5px solid var(--line);border-radius:999px;
+  padding:7px 14px;cursor:pointer;
+}
+.chip[aria-pressed="true"]{background:var(--chalk);color:var(--board);border-color:var(--chalk)}
+.label{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--chalk-dim);font-weight:600}
+.group{display:flex;flex-direction:column;gap:8px}
+
+.btn{
+  font:800 1.25rem var(--f-display);letter-spacing:.08em;text-transform:uppercase;
+  background:var(--amber);color:var(--board);border:0;border-radius:4px;
+  padding:14px 22px;cursor:pointer;align-self:flex-start;
+}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--chalk);border:1.5px solid var(--line)}
+:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+
+.meta{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--chalk-dim)}
+.meta b{color:var(--chalk);font-family:var(--f-mono);font-weight:700}
+
+/* Timer bar */
+.timer{height:6px;background:rgba(238,242,230,.12);border-radius:3px;overflow:hidden}
+.timer i{display:block;height:100%;background:var(--amber);width:100%;transform-origin:left;transition:background .3s}
+.timer.low i{background:var(--loss)}
+
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.answers{grid-template-columns:1fr}}
+.ans{
+  text-align:left;font:600 1rem var(--f-body);color:var(--chalk);
+  background:rgba(11,20,16,.55);border:1.5px solid var(--line);border-radius:4px;
+  padding:13px 14px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;min-width:0;
+}
+.ans .k{font-family:var(--f-mono);font-size:.8rem;color:var(--amber);padding-top:2px}
+.ans:hover:not(:disabled){border-color:var(--chalk)}
+.ans:disabled{cursor:default}
+.ans.right{border-color:var(--win);background:rgba(95,211,138,.16)}
+.ans.wrong{border-color:var(--loss);background:rgba(255,107,90,.14)}
+.ans.dim{opacity:.45}
+
+.verdict{border-left:4px solid var(--win);padding:4px 0 4px 14px;display:flex;flex-direction:column;gap:4px}
+.verdict.bad{border-color:var(--loss)}
+.verdict strong{font-family:var(--f-display);font-size:1.4rem;letter-spacing:.04em;text-transform:uppercase}
+.verdict p{margin:0;color:var(--chalk-dim);max-width:60ch}
+
+/* Full time */
+.final{font-family:var(--f-mono);font-weight:700;color:var(--amber);font-size:clamp(3rem,14vw,5rem);line-height:1;font-variant-numeric:tabular-nums}
+.review{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.review li{display:grid;grid-template-columns:3.2ch 1.2rem 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:.92rem;align-items:baseline}
+.review .min{font-family:var(--f-mono);color:var(--chalk-dim);font-size:.8rem}
+.review .ok{color:var(--win);font-weight:700}
+.review .no{color:var(--loss);font-weight:700}
+.review .q{min-width:0}
+.review .q small{display:block;color:var(--chalk-dim)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+
+/* center-circle decoration on the kickoff panel */
+.circle{position:absolute;right:-60px;top:-60px;width:180px;height:180px;border:2px solid var(--line);border-radius:50%;pointer-events:none}
+.panel{overflow:hidden}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}*,*::before,*::after{box-sizing:border-box}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <div class="board" id="board">
+    <div class="team"><span class="name">You</span><span class="sub" id="youSub">Home</span></div>
+    <div class="score" id="score"><span class="n" id="sYou">0</span><span class="dash">–</span><span class="n" id="sPun">0</span></div>
+    <div class="team right"><span class="name">The Pundit</span><span class="sub">Away</span></div>
+    <div class="clockrow"><span class="clock" id="clock">00:00 · Pre-match</span><span class="ticker" id="ticker">Best result: —</span></div>
+  </div>
+
+  <!-- Kickoff -->
+  <section class="panel" id="kickoff">
+    <div class="circle"></div>
+    <div class="eyebrow"><span>Football knowledge</span><span>10 questions · 15s each</span></div>
+    <h1>Ninety <em>Minutes</em></h1>
+    <p class="lede">Every question is nine minutes of match time. Answer right and you score. Answer wrong or run out the clock, and The Pundit scores. Beat him by full time.</p>
+    <div class="group">
+      <span class="label" id="catLabel">Competition</span>
+      <div class="chips" id="cats" role="group" aria-labelledby="catLabel"></div>
+    </div>
+    <button class="btn" id="start">Kick off</button>
+  </section>
+
+  <!-- Question -->
+  <section class="panel" id="play" hidden>
+    <div class="eyebrow"><span id="qCat">World Cup</span><span id="qNum">Q1 of 10</span></div>
+    <div class="timer" id="timer"><i id="bar"></i></div>
+    <h2 id="qText"></h2>
+    <div class="answers" id="answers"></div>
+    <div class="verdict" id="verdict" hidden><strong id="vHead"></strong><p id="vText"></p></div>
+    <button class="btn" id="next" hidden>Next</button>
+  </section>
+
+  <!-- Full time -->
+  <section class="panel" id="ft" hidden>
+    <div class="eyebrow"><span>Full time</span><span id="ftCat"></span></div>
+    <div class="final" id="ftScore">0 – 0</div>
+    <h2 id="ftHead"></h2>
+    <p class="lede" id="ftText"></p>
+    <div class="row">
+      <button class="btn" id="again">Rematch</button>
+      <button class="btn ghost" id="change">Change competition</button>
+    </div>
+    <span class="label">Match report</span>
+    <ol class="review" id="review"></ol>
+  </section>
+</div>
+
+<script>
+const Q = [
+ // World Cup
+ {c:"World Cup",q:"Which country won the first FIFA World Cup in 1930?",a:["Uruguay","Brazil","Italy","Argentina"],x:"Uruguay hosted and won it, beating Argentina 4–2 in the final in Montevideo."},
+ {c:"World Cup",q:"Who won the 2022 World Cup in Qatar?",a:["Argentina","France","Croatia","Morocco"],x:"Argentina beat France on penalties after a 3–3 draw. It was Messi's first World Cup title."},
+ {c:"World Cup",q:"Who won the Golden Boot at the 2022 World Cup?",a:["Kylian Mbappé","Lionel Messi","Olivier Giroud","Julián Álvarez"],x:"Mbappé scored 8 goals, including a hat-trick in the final."},
+ {c:"World Cup",q:"What was the score when Germany beat hosts Brazil in the 2014 semi-final?",a:["7–1","5–0","4–1","6–2"],x:"Germany led 5–0 inside 30 minutes in Belo Horizonte and went on to win the tournament."},
+ {c:"World Cup",q:"Diego Maradona's 'Hand of God' goal came against which team in 1986?",a:["England","Belgium","West Germany","Italy"],x:"It came in the quarter-final, minutes before his famous solo goal in the same match."},
+ {c:"World Cup",q:"In the 2006 final, Zinedine Zidane was sent off for a headbutt on a player from which team?",a:["Italy","Portugal","Brazil","Germany"],x:"He headbutted Marco Materazzi in extra time. Italy won on penalties."},
+ {c:"World Cup",q:"Which was the first African country to host a World Cup?",a:["South Africa","Egypt","Morocco","Nigeria"],x:"South Africa hosted in 2010. Spain won the tournament."},
+ {c:"World Cup",q:"How many teams take part in the 2026 World Cup?",a:["48","32","40","64"],x:"The 2026 edition, hosted by the USA, Canada and Mexico, was the first with 48 teams."},
+ {c:"World Cup",q:"At which World Cup was VAR used for the first time?",a:["Russia 2018","Brazil 2014","Qatar 2022","South Africa 2010"],x:"VAR made its World Cup debut in Russia in 2018."},
+ {c:"World Cup",q:"How many World Cups did Pelé win as a player?",a:["3","2","4","1"],x:"He won in 1958, 1962 and 1970, the only player to win three."},
+
+ // Europe
+ {c:"Europe",q:"Which club won the first European Cup in 1956?",a:["Real Madrid","Benfica","AC Milan","Reims"],x:"Real Madrid beat Reims 4–3 and then won the first five editions in a row."},
+ {c:"Europe",q:"Liverpool came back from 3–0 down at half-time in the 2005 Champions League final against which club?",a:["AC Milan","Juventus","Bayern Munich","Inter Milan"],x:"The 'Miracle of Istanbul' ended 3–3 and Liverpool won on penalties."},
+ {c:"Europe",q:"Manchester United scored twice in stoppage time to win the 1999 final against which club?",a:["Bayern Munich","Juventus","Barcelona","Valencia"],x:"Sheringham and Solskjær scored to complete the treble at the Camp Nou."},
+ {c:"Europe",q:"Which country won Euro 2016?",a:["Portugal","France","Germany","Wales"],x:"Éder's extra-time goal beat hosts France 1–0 in Paris."},
+ {c:"Europe",q:"Which country won Euro 2024 in Germany?",a:["Spain","England","France","Netherlands"],x:"Spain beat England 2–1 in Berlin for a record fourth European title."},
+ {c:"Europe",q:"The 'Panenka' penalty is named after a player from which national team?",a:["Czechoslovakia","Netherlands","Yugoslavia","Hungary"],x:"Antonín Panenka chipped it down the middle to win the Euro 1976 final shootout against West Germany."},
+ {c:"Europe",q:"Which Italian club is nicknamed 'The Old Lady'?",a:["Juventus","AC Milan","Roma","Napoli"],x:"'La Vecchia Signora' is Juventus, based in Turin."},
+ {c:"Europe",q:"'Der Klassiker' is played between Bayern Munich and which club?",a:["Borussia Dortmund","Schalke 04","Bayer Leverkusen","Hamburg"],x:"It is the biggest fixture in modern German football."},
+ {c:"Europe",q:"In which city is the San Siro stadium?",a:["Milan","Rome","Turin","Naples"],x:"It is home to both AC Milan and Inter."},
+ {c:"Europe",q:"Johan Cruyff is most associated with which style of play?",a:["Total Football","Catenaccio","Tiki-taka","Gegenpressing"],x:"He was the face of Total Football with Ajax and the Netherlands in the 1970s."},
+
+ // England
+ {c:"England",q:"In which season did the Premier League begin?",a:["1992–93","1988–89","1995–96","1990–91"],x:"The first Premier League season kicked off in August 1992."},
+ {c:"England",q:"Arsenal's 'Invincibles' went a whole league season unbeaten. Which season?",a:["2003–04","2001–02","2004–05","1997–98"],x:"They won 26 and drew 12 of their 38 games."},
+ {c:"England",q:"Leicester City won the Premier League as 5000-1 outsiders in which season?",a:["2015–16","2013–14","2016–17","2014–15"],x:"Claudio Ranieri's side finished 10 points clear."},
+ {c:"England",q:"Which English club is nicknamed 'The Toffees'?",a:["Everton","Fulham","Burnley","Wolves"],x:"The name is linked to a sweet shop near Everton's early grounds."},
+ {c:"England",q:"Who scored the fastest hat-trick in Premier League history?",a:["Sadio Mané","Robbie Fowler","Sergio Agüero","Alan Shearer"],x:"Mané scored three in 2 minutes 56 seconds for Southampton against Aston Villa in 2015."},
+ {c:"England",q:"Thierry Henry is the all-time top scorer for which club?",a:["Arsenal","Chelsea","Manchester City","Tottenham"],x:"He scored 228 goals for Arsenal across two spells."},
+ {c:"England",q:"Mohamed Salah joined Liverpool in 2017 from which club?",a:["Roma","Chelsea","Fiorentina","Basel"],x:"He scored 32 league goals in his first season, a 38-game record at the time."},
+
+ // Africa
+ {c:"Africa",q:"Which country has won the Africa Cup of Nations the most times?",a:["Egypt","Cameroon","Ghana","Nigeria"],x:"Egypt has seven titles, including three in a row in 2006, 2008 and 2010."},
+ {c:"Africa",q:"Mohamed Salah started his senior career at which Egyptian club?",a:["Al Mokawloon","Al Ahly","Zamalek","Ismaily"],x:"He came through at El Mokawloon (Arab Contractors) before moving to Basel in 2012."},
+ {c:"Africa",q:"CAF named which club 'African Club of the Century'?",a:["Al Ahly","Zamalek","TP Mazembe","Espérance"],x:"Al Ahly received the title in 2000 and holds the record for CAF Champions League wins."},
+ {c:"Africa",q:"Which country became the first African team to reach a World Cup semi-final?",a:["Morocco","Ghana","Senegal","Cameroon"],x:"Morocco did it at Qatar 2022, knocking out Spain and Portugal on the way."},
+ {c:"Africa",q:"George Weah, the only African to win the Ballon d'Or, played for which country?",a:["Liberia","Ivory Coast","Nigeria","Ghana"],x:"He won it in 1995 while at AC Milan, and later became President of Liberia."},
+
+ // Laws & legends
+ {c:"Laws & Legends",q:"How far is the penalty spot from the goal line?",a:["12 yards (11 m)","10 yards (9 m)","14 yards (13 m)","18 yards (16.5 m)"],x:"The edge of the penalty area is 18 yards out; the spot is 12."},
+ {c:"Laws & Legends",q:"How many points does a team get for a league win in most competitions today?",a:["3","2","4","1"],x:"England switched from 2 to 3 points in 1981, and FIFA adopted it worldwide in 1995."},
+ {c:"Laws & Legends",q:"Which is the only goalkeeper to have won the Ballon d'Or?",a:["Lev Yashin","Gianluigi Buffon","Manuel Neuer","Iker Casillas"],x:"The Soviet keeper won it in 1963."},
+ {c:"Laws & Legends",q:"As of the 2025 award, who has won the most Ballon d'Or trophies?",a:["Lionel Messi","Cristiano Ronaldo","Michel Platini","Johan Cruyff"],x:"Messi has eight. Ronaldo is next with five."},
+ {c:"Laws & Legends",q:"How many players can a team have on the pitch, including the goalkeeper?",a:["11","10","12","9"],x:"A match cannot continue if a team has fewer than seven."},
+ {c:"Laws & Legends",q:"What is the minimum distance opponents must stand from the ball at a free kick?",a:["10 yards (9.15 m)","5 yards (4.5 m)","8 yards (7.3 m)","12 yards (11 m)"],x:"It is the same as the radius of the centre circle."},
+ {c:"Laws & Legends",q:"Which country won the 2021 Copa América at the Maracanã?",a:["Argentina","Brazil","Uruguay","Colombia"],x:"Ángel Di María's goal beat Brazil 1–0, Messi's first senior title with Argentina."},
+ {c:"Laws & Legends",q:"How long is each half of extra time?",a:["15 minutes","10 minutes","20 minutes","30 minutes"],x:"Two halves of 15 minutes, then penalties if it is still level."},
+
+ // World Cup (more)
+ {c:"World Cup",q:"Which country has won the most World Cups?",a:["Brazil","Germany","Italy","Argentina"],x:"Brazil has five: 1958, 1962, 1970, 1994 and 2002."},
+ {c:"World Cup",q:"Who is the all-time top scorer at World Cup finals?",a:["Miroslav Klose","Ronaldo Nazário","Gerd Müller","Lionel Messi"],x:"Klose scored 16 goals for Germany across four tournaments."},
+ {c:"World Cup",q:"Just Fontaine holds the record for most goals at a single World Cup. How many did he score in 1958?",a:["13","10","11","9"],x:"He scored 13 for France in Sweden, a record that still stands."},
+ {c:"World Cup",q:"Who scored a hat-trick for England in the 1966 World Cup final?",a:["Geoff Hurst","Bobby Charlton","Jimmy Greaves","Martin Peters"],x:"England beat West Germany 4–2 at Wembley."},
+ {c:"World Cup",q:"Who scored the winning goal in the 2010 World Cup final?",a:["Andrés Iniesta","David Villa","Fernando Torres","Xavi"],x:"Iniesta scored in extra time to beat the Netherlands 1–0."},
+ {c:"World Cup",q:"Who scored the extra-time winner in the 2014 World Cup final?",a:["Mario Götze","Thomas Müller","André Schürrle","Toni Kroos"],x:"Götze's volley beat Argentina 1–0 in Rio."},
+ {c:"World Cup",q:"Which team did France beat 4–2 in the 2018 World Cup final?",a:["Croatia","Belgium","England","Argentina"],x:"It was France's second title, 20 years after their first."},
+ {c:"World Cup",q:"The 1994 final was the first decided on penalties. Which Italian star missed the last kick?",a:["Roberto Baggio","Franco Baresi","Paolo Maldini","Daniele Massaro"],x:"Brazil won the shootout at the Rose Bowl in Pasadena."},
+ {c:"World Cup",q:"Which two countries co-hosted the 2002 World Cup?",a:["South Korea and Japan","China and Japan","USA and Mexico","Belgium and Netherlands"],x:"It was the first World Cup held in Asia."},
+ {c:"World Cup",q:"How many goals did Ronaldo Nazário score in the 2002 final against Germany?",a:["2","1","3","0"],x:"His two goals won Brazil a fifth title and gave him the Golden Boot with 8."},
+ {c:"World Cup",q:"The 'Maracanazo' of 1950 saw Brazil lose the deciding match to which team?",a:["Uruguay","Argentina","Sweden","Spain"],x:"Uruguay won 2–1 in front of about 200,000 people at the Maracanã."},
+ {c:"World Cup",q:"Who became the oldest World Cup goalscorer, aged 42, in 1994?",a:["Roger Milla","Dino Zoff","Peter Shilton","Lothar Matthäus"],x:"The Cameroon striker scored against Russia."},
+ {c:"World Cup",q:"Who holds the record for most World Cup matches played?",a:["Lionel Messi","Lothar Matthäus","Miroslav Klose","Paolo Maldini"],x:"Messi reached 26 matches at Qatar 2022."},
+ {c:"World Cup",q:"Besides Geoff Hurst, who is the only man to score a hat-trick in a World Cup final?",a:["Kylian Mbappé","Pelé","Zinedine Zidane","Ronaldo Nazário"],x:"Mbappé did it against Argentina in 2022 and still finished on the losing side."},
+ {c:"World Cup",q:"Which three countries are the main hosts of the 2030 World Cup?",a:["Spain, Portugal and Morocco","Uruguay, Argentina and Chile","Egypt, Saudi Arabia and Greece","England, France and Italy"],x:"Uruguay, Argentina and Paraguay will also each stage one match to mark the centenary."},
+ {c:"World Cup",q:"Zidane scored two headers in which World Cup final?",a:["1998 vs Brazil","2006 vs Italy","2002 vs Germany","1994 vs Italy"],x:"France won 3–0 in Paris to lift their first World Cup."},
+ {c:"World Cup",q:"Which country hosted and won the 1978 World Cup?",a:["Argentina","West Germany","Italy","Brazil"],x:"Argentina beat the Netherlands 3–1 after extra time in Buenos Aires."},
+ {c:"World Cup",q:"How many World Cups has Italy won?",a:["4","3","2","5"],x:"1934, 1938, 1982 and 2006."},
+
+ // Europe (more)
+ {c:"Europe",q:"Which club has won the most European Cup / Champions League titles?",a:["Real Madrid","AC Milan","Bayern Munich","Liverpool"],x:"Real Madrid have won it 15 times."},
+ {c:"Europe",q:"Which club became the first British winner of the European Cup in 1967?",a:["Celtic","Manchester United","Liverpool","Rangers"],x:"The 'Lisbon Lions' beat Inter 2–1, with every player born near Glasgow."},
+ {c:"Europe",q:"Brian Clough won back-to-back European Cups in 1979 and 1980 with which club?",a:["Nottingham Forest","Derby County","Leeds United","Aston Villa"],x:"Forest won the trophy more times than they have won the English league."},
+ {c:"Europe",q:"José Mourinho won the Champions League in 2004 with which club?",a:["Porto","Benfica","Chelsea","Monaco"],x:"Porto beat Monaco 3–0 in the final in Gelsenkirchen."},
+ {c:"Europe",q:"Which club did Mourinho lead to a treble in 2010?",a:["Inter Milan","Chelsea","Real Madrid","Porto"],x:"Inter won Serie A, the Coppa Italia and the Champions League."},
+ {c:"Europe",q:"Who coached Barcelona to six trophies in 2009?",a:["Pep Guardiola","Frank Rijkaard","Luis Enrique","Tito Vilanova"],x:"It was his first full season as a senior manager."},
+ {c:"Europe",q:"Which country won Euro 2004 as huge outsiders?",a:["Greece","Portugal","Czech Republic","Denmark"],x:"Greece beat hosts Portugal 1–0 in the final in Lisbon."},
+ {c:"Europe",q:"Denmark won Euro 1992 after being called in to replace which team?",a:["Yugoslavia","Soviet Union","Italy","Belgium"],x:"Yugoslavia was banned days before the tournament. Denmark beat Germany in the final."},
+ {c:"Europe",q:"Who won Euro 2020, played in 2021?",a:["Italy","England","Spain","Denmark"],x:"Italy beat England on penalties at Wembley."},
+ {c:"Europe",q:"Manchester City won their first Champions League in 2023 against which club?",a:["Inter Milan","Real Madrid","Chelsea","Bayern Munich"],x:"Rodri scored the only goal in Istanbul."},
+ {c:"Europe",q:"PSG won their first Champions League in 2025 by beating which club 5–0?",a:["Inter Milan","Arsenal","Borussia Dortmund","Barcelona"],x:"It was the biggest winning margin in a European Cup final."},
+ {c:"Europe",q:"Which club went the whole 2023–24 Bundesliga season unbeaten?",a:["Bayer Leverkusen","Bayern Munich","RB Leipzig","Borussia Dortmund"],x:"Xabi Alonso's team ended Bayern's run of 11 straight titles."},
+ {c:"Europe",q:"Who managed Real Madrid to three Champions League titles in a row, 2016 to 2018?",a:["Zinedine Zidane","Carlo Ancelotti","José Mourinho","Rafael Benítez"],x:"No club had won it three years running in the Champions League era."},
+ {c:"Europe",q:"Who is the all-time top scorer in the Champions League?",a:["Cristiano Ronaldo","Lionel Messi","Robert Lewandowski","Raúl"],x:"Ronaldo scored 140 goals in the competition."},
+ {c:"Europe",q:"Which French club was the first from France to win the Champions League, in 1993?",a:["Marseille","PSG","Monaco","Lyon"],x:"Marseille beat AC Milan 1–0 in Munich."},
+ {c:"Europe",q:"Which club plays its home games at Signal Iduna Park?",a:["Borussia Dortmund","Schalke 04","Bayern Munich","Eintracht Frankfurt"],x:"It is also known as the Westfalenstadion and has the famous 'Yellow Wall'."},
+ {c:"Europe",q:"Which two clubs contest the 'Derby della Madonnina'?",a:["AC Milan and Inter","Roma and Lazio","Juventus and Torino","Genoa and Sampdoria"],x:"It is named after the statue of the Virgin Mary on top of Milan Cathedral."},
+ {c:"Europe",q:"Zidane's famous volley won the 2002 Champions League final against which club?",a:["Bayer Leverkusen","Valencia","Juventus","Monaco"],x:"Real Madrid won 2–1 at Hampden Park in Glasgow."},
+ {c:"Europe",q:"Which was the first Turkish club to win a European trophy?",a:["Galatasaray","Fenerbahçe","Beşiktaş","Trabzonspor"],x:"Galatasaray beat Arsenal on penalties in the 2000 UEFA Cup final."},
+ {c:"Europe",q:"Which club won three European Cups in a row from 1971 to 1973?",a:["Ajax","Bayern Munich","Feyenoord","Benfica"],x:"Cruyff's Ajax were the team of the early 1970s."},
+ {c:"Europe",q:"Who coached Bayern Munich to the treble in 2013?",a:["Jupp Heynckes","Pep Guardiola","Louis van Gaal","Hansi Flick"],x:"Bayern beat Dortmund in an all-German final at Wembley."},
+ {c:"Europe",q:"Which was the first Eastern European club to win the European Cup, in 1986?",a:["Steaua Bucharest","Red Star Belgrade","Dynamo Kyiv","CSKA Sofia"],x:"Steaua beat Barcelona on penalties; their keeper saved all four Barça kicks."},
+
+ // England (more)
+ {c:"England",q:"Who is the Premier League's all-time top scorer?",a:["Alan Shearer","Harry Kane","Wayne Rooney","Thierry Henry"],x:"Shearer scored 260 Premier League goals for Blackburn and Newcastle."},
+ {c:"England",q:"Which club has won the most Premier League titles?",a:["Manchester United","Manchester City","Chelsea","Arsenal"],x:"United won 13, all under Sir Alex Ferguson."},
+ {c:"England",q:"Manchester City became the first team to reach 100 Premier League points in which season?",a:["2017–18","2018–19","2011–12","2020–21"],x:"Guardiola's 'Centurions' won the league by 19 points."},
+ {c:"England",q:"How many Premier League goals did Erling Haaland score in his record 2022–23 season?",a:["36","34","38","32"],x:"He broke the 34-goal record shared by Andy Cole and Alan Shearer."},
+ {c:"England",q:"Sergio Agüero's 93rd-minute title winner in 2012 came against which club?",a:["QPR","Sunderland","Stoke City","Wigan"],x:"City beat QPR 3–2 to win their first league title in 44 years."},
+ {c:"England",q:"Which club has won the FA Cup the most times?",a:["Arsenal","Manchester United","Chelsea","Liverpool"],x:"Arsenal have won it 14 times."},
+ {c:"England",q:"The FA Cup is the oldest national football competition. When was it first played?",a:["1871–72","1888–89","1901–02","1863–64"],x:"Wanderers won the first final."},
+ {c:"England",q:"Who is Chelsea's all-time top scorer, despite being a midfielder?",a:["Frank Lampard","Didier Drogba","Kerry Dixon","Bobby Tambling"],x:"Lampard scored 211 goals for the club."},
+ {c:"England",q:"Who is Manchester United's all-time top scorer?",a:["Wayne Rooney","Bobby Charlton","Denis Law","Ryan Giggs"],x:"Rooney passed Bobby Charlton's record and finished on 253."},
+ {c:"England",q:"Who managed Liverpool to the 2024–25 Premier League title in his first season?",a:["Arne Slot","Jürgen Klopp","Xabi Alonso","Mauricio Pochettino"],x:"Slot replaced Klopp in summer 2024."},
+ {c:"England",q:"Which goalkeeper holds the record for most Premier League clean sheets?",a:["Petr Čech","David de Gea","Edwin van der Sar","David James"],x:"Čech kept 202 clean sheets for Chelsea and Arsenal."},
+ {c:"England",q:"Tottenham won the 2025 Europa League final against which club?",a:["Manchester United","Chelsea","Athletic Bilbao","Roma"],x:"Spurs won 1–0 in Bilbao, their first major trophy in 17 years."},
+ {c:"England",q:"Which English club is nicknamed 'The Magpies'?",a:["Newcastle United","West Brom","Notts County","Fulham"],x:"The name comes from their black-and-white stripes."},
+ {c:"England",q:"Which club is nicknamed 'The Hammers'?",a:["West Ham United","Millwall","Crystal Palace","Charlton"],x:"It comes from the club's origins as the Thames Ironworks works team."},
+ {c:"England",q:"Who was Manchester United manager from 1986 to 2013?",a:["Sir Alex Ferguson","Sir Matt Busby","Ron Atkinson","David Moyes"],x:"Ferguson won 38 trophies, including 13 league titles and two Champions Leagues."},
+ {c:"England",q:"Liverpool's 2019–20 title ended a wait of how many years for a league title?",a:["30","25","20","35"],x:"Their previous title came in 1989–90."},
+ {c:"England",q:"Which club won four Premier League titles in a row from 2020–21 to 2023–24?",a:["Manchester City","Liverpool","Manchester United","Arsenal"],x:"No other club has won four English titles in a row."},
+ {c:"England",q:"Roman Abramovich bought Chelsea in which year?",a:["2003","2000","2005","2008"],x:"Chelsea won their first league title in 50 years two seasons later."},
+
+ // Africa (more)
+ {c:"Africa",q:"Senegal won their first AFCON in 2022 by beating which team on penalties?",a:["Egypt","Cameroon","Morocco","Tunisia"],x:"Sadio Mané scored the winning penalty in Yaoundé."},
+ {c:"Africa",q:"Which country won the AFCON it hosted in early 2024?",a:["Ivory Coast","Nigeria","South Africa","Senegal"],x:"Ivory Coast beat Nigeria 2–1 in the final after nearly going out in the group stage."},
+ {c:"Africa",q:"Algeria won the 2019 AFCON in which city?",a:["Cairo","Algiers","Dakar","Rabat"],x:"They beat Senegal 1–0 in the final at Cairo International Stadium."},
+ {c:"Africa",q:"Zambia won their only AFCON in 2012, beating which team in the final?",a:["Ivory Coast","Ghana","Mali","Egypt"],x:"They won on penalties in Libreville, close to where their 1993 team died in a plane crash."},
+ {c:"Africa",q:"Who is the all-time top scorer in Africa Cup of Nations history?",a:["Samuel Eto'o","Didier Drogba","Hossam Hassan","Laurent Pokou"],x:"Eto'o scored 18 AFCON goals for Cameroon."},
+ {c:"Africa",q:"Which was the first African country to play at a World Cup, in 1934?",a:["Egypt","Morocco","Tunisia","South Africa"],x:"Egypt lost 4–2 to Hungary in Italy."},
+ {c:"Africa",q:"Who won the first Africa Cup of Nations in 1957?",a:["Egypt","Ethiopia","Sudan","Ghana"],x:"Only three teams took part. Egypt beat Ethiopia 4–0 in the final in Khartoum."},
+ {c:"Africa",q:"At the 2002 World Cup, debutants Senegal beat which holders in the opening game?",a:["France","Brazil","Germany","Italy"],x:"Papa Bouba Diop scored the only goal in Seoul."},
+ {c:"Africa",q:"Ghana missed a last-minute penalty against which team in the 2010 World Cup quarter-final?",a:["Uruguay","Paraguay","Netherlands","Germany"],x:"Luis Suárez handled on the line. Asamoah Gyan missed the penalty and Uruguay won the shootout."},
+ {c:"Africa",q:"Which was the first African team to reach a World Cup quarter-final, in 1990?",a:["Cameroon","Nigeria","Egypt","Algeria"],x:"Roger Milla's Cameroon lost to England after extra time."},
+ {c:"Africa",q:"What is the Egyptian national team's nickname?",a:["The Pharaohs","The Desert Foxes","The Eagles of Carthage","The Falcons"],x:"The Desert Foxes are Algeria and the Eagles of Carthage are Tunisia."},
+ {c:"Africa",q:"Which national team is nicknamed 'The Atlas Lions'?",a:["Morocco","Cameroon","Senegal","Tunisia"],x:"Cameroon are the Indomitable Lions and Senegal the Lions of Teranga."},
+ {c:"Africa",q:"Which national team is known as the 'Super Eagles'?",a:["Nigeria","Ghana","Mali","Zambia"],x:"Ghana are the Black Stars and Zambia the Chipolopolo."},
+ {c:"Africa",q:"Which two clubs play the Cairo Derby?",a:["Al Ahly and Zamalek","Al Ahly and Pyramids","Zamalek and Ismaily","Al Masry and Al Ittihad"],x:"It is one of the biggest club derbies in the world."},
+ {c:"Africa",q:"Mohamed Aboutrika won five CAF Champions Leagues with which club?",a:["Al Ahly","Zamalek","Ismaily","Tersana"],x:"He is one of the most loved players in Egyptian football history."},
+ {c:"Africa",q:"Riyad Mahrez plays for which national team?",a:["Algeria","Morocco","Tunisia","France"],x:"He captained Algeria to the 2019 AFCON title."},
+ {c:"Africa",q:"Achraf Hakimi represents which country?",a:["Morocco","Spain","Algeria","Senegal"],x:"He was born in Madrid but chose to play for Morocco."},
+ {c:"Africa",q:"Didier Drogba is the record goalscorer for which national team?",a:["Ivory Coast","Ghana","Cameroon","Togo"],x:"He scored 65 goals for the Elephants."},
+
+ // Laws & Legends (more)
+ {c:"Laws & Legends",q:"How wide is a full-size goal?",a:["8 yards (7.32 m)","7 yards (6.4 m)","9 yards (8.23 m)","10 yards (9.14 m)"],x:"It is 8 feet (2.44 m) high."},
+ {c:"Laws & Legends",q:"What size of ball is used in adult matches?",a:["Size 5","Size 4","Size 6","Size 3"],x:"Size 4 is mostly used for younger players."},
+ {c:"Laws & Legends",q:"A player cannot be offside directly from which of these?",a:["A throw-in","A free kick","A pass from a teammate","A header"],x:"You also cannot be offside directly from a goal kick or a corner."},
+ {c:"Laws & Legends",q:"How many substitutes can a team use in most top competitions today?",a:["5","3","4","6"],x:"IFAB made five substitutes a permanent option in 2022."},
+ {c:"Laws & Legends",q:"At which World Cup were yellow and red cards first used?",a:["1970","1966","1974","1982"],x:"English referee Ken Aston came up with the idea from traffic lights."},
+ {c:"Laws & Legends",q:"What is Pelé's real name?",a:["Edson Arantes do Nascimento","Ricardo Izecson dos Santos","Manuel Francisco dos Santos","Artur Antunes Coimbra"],x:"The other names belong to Kaká, Garrincha and Zico."},
+ {c:"Laws & Legends",q:"Which legend was nicknamed 'Der Kaiser'?",a:["Franz Beckenbauer","Gerd Müller","Karl-Heinz Rummenigge","Lothar Matthäus"],x:"He won the World Cup as a player in 1974 and as a coach in 1990."},
+ {c:"Laws & Legends",q:"Which player was known as 'The Divine Ponytail'?",a:["Roberto Baggio","Carlos Valderrama","Gabriel Batistuta","Paolo Maldini"],x:"Il Divin Codino won the Ballon d'Or in 1993."},
+ {c:"Laws & Legends",q:"Cristiano Ronaldo started his professional career at which club?",a:["Sporting CP","Benfica","Porto","Nacional"],x:"Manchester United signed him from Sporting in 2003."},
+ {c:"Laws & Legends",q:"Which club did Lionel Messi join after leaving Barcelona in 2021?",a:["Paris Saint-Germain","Inter Miami","Manchester City","Al-Hilal"],x:"He moved on to Inter Miami in 2023."},
+ {c:"Laws & Legends",q:"Who has scored the most goals in men's international football?",a:["Cristiano Ronaldo","Ali Daei","Lionel Messi","Pelé"],x:"Ronaldo passed Ali Daei's record of 109 in 2021."},
+ {c:"Laws & Legends",q:"Who won the 2018 Ballon d'Or, ending the Messi–Ronaldo run?",a:["Luka Modrić","Antoine Griezmann","Kylian Mbappé","Mohamed Salah"],x:"Messi or Ronaldo had won it every year from 2008 to 2017."},
+ {c:"Laws & Legends",q:"Who won the 2024 Ballon d'Or?",a:["Rodri","Vinícius Júnior","Jude Bellingham","Erling Haaland"],x:"The Manchester City midfielder also won Euro 2024 with Spain."},
+ {c:"Laws & Legends",q:"Who won the 2025 Ballon d'Or?",a:["Ousmane Dembélé","Lamine Yamal","Mohamed Salah","Raphinha"],x:"Dembélé won it after PSG's Champions League triumph."},
+ {c:"Laws & Legends",q:"Which country has won the most Women's World Cups?",a:["USA","Germany","Norway","Japan"],x:"The USA have won four: 1991, 1999, 2015 and 2019."},
+ {c:"Laws & Legends",q:"Who won the 2023 Women's World Cup?",a:["Spain","England","Sweden","USA"],x:"Spain beat England 1–0 in Sydney."},
+ {c:"Laws & Legends",q:"How does a referee signal an indirect free kick?",a:["Raises an arm above the head","Points to the spot","Blows the whistle twice","Crosses both arms"],x:"The arm stays up until the ball touches another player or goes out."},
+ {c:"Laws & Legends",q:"How many kicks does each team take in a penalty shootout before sudden death?",a:["5","3","6","4"],x:"If it is still level after five each, it goes to sudden death."},
+ {c:"Laws & Legends",q:"Which Brazilian striker was nicknamed 'O Fenômeno'?",a:["Ronaldo Nazário","Romário","Ronaldinho","Adriano"],x:"He won the Ballon d'Or in 1997 and 2002."},
+
+ // South America
+ {c:"South America",q:"Which club has won the most Copa Libertadores titles?",a:["Independiente","Boca Juniors","River Plate","Peñarol"],x:"Independiente of Argentina have won it seven times."},
+ {c:"South America",q:"Which country has won the most Copa América titles?",a:["Argentina","Uruguay","Brazil","Chile"],x:"Argentina have 16, one ahead of Uruguay."},
+ {c:"South America",q:"Argentina won the 2024 Copa América by beating which team in the final?",a:["Colombia","Brazil","Uruguay","Canada"],x:"Lautaro Martínez scored in extra time in Miami."},
+ {c:"South America",q:"Which two clubs play the Argentine 'Superclásico'?",a:["Boca Juniors and River Plate","Racing and Independiente","San Lorenzo and Huracán","Rosario Central and Newell's"],x:"Racing vs Independiente is the Avellaneda derby."},
+ {c:"South America",q:"La Bombonera is the home stadium of which club?",a:["Boca Juniors","River Plate","Flamengo","Peñarol"],x:"The name means 'the chocolate box' because of its shape."},
+ {c:"South America",q:"The 2018 Libertadores final between River and Boca was moved to which city?",a:["Madrid","Miami","Barcelona","Lima"],x:"It was played at the Bernabéu after Boca's bus was attacked. River won."},
+ {c:"South America",q:"Pelé and Neymar both started their careers at which club?",a:["Santos","Flamengo","São Paulo","Corinthians"],x:"Pelé spent almost his entire career at Santos."},
+ {c:"South America",q:"Who won the Golden Boot at the 2014 World Cup?",a:["James Rodríguez","Thomas Müller","Lionel Messi","Neymar"],x:"The Colombian scored six goals, including a famous volley against Uruguay."},
+ {c:"South America",q:"Chile won the Copa América in 2015 and 2016. Who did they beat in both finals?",a:["Argentina","Brazil","Mexico","Colombia"],x:"Both finals finished 0–0 and Chile won on penalties."},
+ {c:"South America",q:"Carlos Valderrama, famous for his big blond hair, played for which country?",a:["Colombia","Uruguay","Peru","Ecuador"],x:"He played at three World Cups with Colombia."},
+ {c:"South America",q:"Diego Forlán won the Golden Ball at the 2010 World Cup playing for which country?",a:["Uruguay","Argentina","Paraguay","Chile"],x:"Uruguay reached the semi-finals."},
+ {c:"South America",q:"When was the first Copa América played?",a:["1916","1930","1910","1924"],x:"It is the oldest international tournament still played. Uruguay won the first one in Argentina."},
+ {c:"South America",q:"In which city is Flamengo based?",a:["Rio de Janeiro","São Paulo","Belo Horizonte","Porto Alegre"],x:"They play many big games at the Maracanã."},
+ {c:"South America",q:"Uruguay legend Luis Suárez is his country's all-time top scorer. Which club did he leave Liverpool for?",a:["Barcelona","Atlético Madrid","Ajax","Inter Miami"],x:"He joined Barcelona in 2014 and formed 'MSN' with Messi and Neymar."},
+ {c:"South America",q:"Which Argentine striker was nicknamed 'Batigol'?",a:["Gabriel Batistuta","Hernán Crespo","Sergio Agüero","Claudio Caniggia"],x:"He is a Fiorentina legend."},
+ {c:"South America",q:"Which Argentina goalkeeper saved two penalties in the 2014 World Cup semi-final shootout against the Netherlands?",a:["Sergio Romero","Emiliano Martínez","Willy Caballero","Franco Armani"],x:"Romero saved two Dutch penalties to send Argentina to the final."}
+];
+const CATS = ["Mixed","World Cup","Europe","England","Africa","South America","Laws & Legends"];
+const LEN = 10, SECS = 15;
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){try{return localStorage.getItem(k)}catch(e){return null}},
+  set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+};
+
+let cat = "Mixed", deck = [], i = 0, you = 0, pun = 0, log = [], timer = null, t0 = 0, locked = false;
+
+function shuffle(arr){const a=arr.slice();for(let j=a.length-1;j>0;j--){const k=Math.floor(Math.random()*(j+1));[a[j],a[k]]=[a[k],a[j]]}return a}
+
+function renderCats(){
+  const box=$("cats");box.innerHTML="";
+  CATS.forEach(c=>{
+    const n = c==="Mixed"?Q.length:Q.filter(q=>q.c===c).length;
+    const b=document.createElement("button");b.className="chip";b.type="button";
+    b.textContent=`${c} · ${n}`;b.setAttribute("aria-pressed",String(c===cat));
+    b.onclick=()=>{cat=c;renderCats()};box.appendChild(b);
+  });
+}
+function showBest(){
+  const b = store.get("nm-best");
+  $("ticker").textContent = b ? `Best result: ${b}` : "Best result: —";
+}
+function setScore(flashWho){
+  $("sYou").textContent=you;$("sPun").textContent=pun;
+  const s=$("score");
+  if(flashWho){
+    const el=$(flashWho==="you"?"sYou":"sPun");
+    el.parentElement.classList.remove("flash");void el.offsetWidth;
+    el.style.animation="none";void el.offsetWidth;el.style.animation="pop .5s ease";
+  }
+}
+function setClock(min,label){$("clock").textContent=`${String(min).padStart(2,"0")}:00 · ${label}`}
+
+function start(){
+  const pool = cat==="Mixed"?Q:Q.filter(q=>q.c===cat);
+  // Prefer questions this player hasn't seen yet; reset when a competition runs out.
+  let seen;try{seen=new Set(JSON.parse(store.get("nm-seen")||"[]"))}catch(e){seen=new Set()}
+  let fresh=pool.filter(q=>!seen.has(q.q));
+  if(fresh.length<LEN){pool.forEach(q=>seen.delete(q.q));fresh=pool.slice()}
+  deck = shuffle(fresh).slice(0,Math.min(LEN,fresh.length));
+  deck.forEach(q=>seen.add(q.q));
+  store.set("nm-seen",JSON.stringify([...seen]));
+  i=0;you=0;pun=0;log=[];setScore();
+  $("kickoff").hidden=true;$("ft").hidden=true;$("play").hidden=false;
+  ask();
+}
+function minuteFor(n){return Math.round((n)*90/deck.length)}
+
+function ask(){
+  locked=false;
+  const q=deck[i];
+  $("qCat").textContent=q.c;
+  $("qNum").textContent=`Q${i+1} of ${deck.length}`;
+  $("qText").textContent=q.q;
+  $("verdict").hidden=true;$("next").hidden=true;
+  setClock(minuteFor(i), i===0?"Kick-off":(minuteFor(i)>=45&&minuteFor(i-1)<45?"Second half":"In play"));
+  const opts=shuffle(q.a);
+  const box=$("answers");box.innerHTML="";
+  opts.forEach((o,k)=>{
+    const b=document.createElement("button");b.className="ans";b.type="button";
+    b.innerHTML=`<span class="k">${"ABCD"[k]}</span><span></span>`;
+    b.lastChild.textContent=o;b.dataset.v=o;
+    b.onclick=()=>answer(o);box.appendChild(b);
+  });
+  startTimer();
+}
+function startTimer(){
+  cancelAnimationFrame(timer);
+  t0=performance.now();
+  const bar=$("bar"),wrap=$("timer");
+  const tick=now=>{
+    const left=Math.max(0,1-(now-t0)/(SECS*1000));
+    bar.style.transform=`scaleX(${left})`;
+    wrap.classList.toggle("low",left<.3);
+    if(left<=0){answer(null);return}
+    timer=requestAnimationFrame(tick);
+  };
+  timer=requestAnimationFrame(tick);
+}
+function answer(choice){
+  if(locked)return;locked=true;
+  cancelAnimationFrame(timer);
+  const q=deck[i],correct=q.a[0],ok=choice===correct;
+  document.querySelectorAll(".ans").forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.v===correct)b.classList.add("right");
+    else if(b.dataset.v===choice)b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  const min=minuteFor(i+1);
+  if(ok){you++;setScore("you")}else{pun++;setScore("pun")}
+  log.push({min,ok,q:q.q,a:correct,timeout:choice===null});
+  $("ticker").textContent = ok ? `${min}' GOAL — You` : `${min}' GOAL — The Pundit`;
+  const v=$("verdict");v.hidden=false;v.classList.toggle("bad",!ok);
+  $("vHead").textContent = ok ? "Goal!" : (choice===null ? "Time's up. Pundit scores." : "Saved. Pundit scores on the break.");
+  $("vText").textContent = (ok?"":`Answer: ${correct}. `)+q.x;
+  const nx=$("next");nx.hidden=false;nx.textContent = i===deck.length-1 ? "Full time" : "Next";
+  nx.focus({preventScroll:true});
+}
+function next(){
+  i++;
+  if(i>=deck.length)return fullTime();
+  ask();
+}
+function fullTime(){
+  $("play").hidden=true;$("ft").hidden=false;
+  setClock(90,"Full time");
+  $("ftScore").textContent=`${you} – ${pun}`;
+  $("ftCat").textContent=cat;
+  let head,text;
+  const diff=you-pun;
+  if(you===deck.length){head="Perfect match.";text="Clean sheet and a full scoreline. The Pundit has nothing to say."}
+  else if(diff>=4){head="Comfortable win.";text="You controlled this one from the first whistle."}
+  else if(diff>0){head="You win.";text="Close in places, but the points are yours."}
+  else if(diff===0){head="Honours even.";text="A draw. Go again and settle it."}
+  else if(diff>-4){head="Narrow defeat.";text="A couple of chances went begging. Check the match report and go again."}
+  else {head="The Pundit wins.";text="Heavy defeat. The match report below has every answer."}
+  $("ftHead").textContent=head;$("ftText").textContent=text;
+  const r=$("review");r.innerHTML="";
+  log.forEach(e=>{
+    const li=document.createElement("li");
+    li.innerHTML=`<span class="min">${e.min}'</span><span class="${e.ok?"ok":"no"}">${e.ok?"✓":"✕"}</span><span class="q"></span>`;
+    const q=li.querySelector(".q");q.textContent=e.q;
+    const s=document.createElement("small");s.textContent=(e.timeout?"No answer · ":"")+e.a;q.appendChild(s);
+    r.appendChild(li);
+  });
+  const best=store.get("nm-best-diff");
+  if(best===null||diff>Number(best)){store.set("nm-best-diff",String(diff));store.set("nm-best",`${you}–${pun} (${cat})`)}
+  showBest();
+}
+function toKickoff(){
+  $("ft").hidden=true;$("play").hidden=true;$("kickoff").hidden=false;
+  you=0;pun=0;setScore();setClock(0,"Pre-match");showBest();
+}
+
+$("start").onclick=start;
+$("next").onclick=next;
+$("again").onclick=start;
+$("change").onclick=toKickoff;
+document.addEventListener("keydown",e=>{
+  if($("play").hidden||locked)return;
+  const k="abcd".indexOf(e.key.toLowerCase());
+  const btns=document.querySelectorAll(".ans");
+  if(k>=0&&btns[k])btns[k].click();
+});
+renderCats();showBest();
+</script>
+
+</body>
+</html>
